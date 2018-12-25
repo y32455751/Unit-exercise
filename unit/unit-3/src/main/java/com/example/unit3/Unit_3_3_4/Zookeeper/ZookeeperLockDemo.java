@@ -53,15 +53,17 @@ public class ZookeeperLockDemo implements Lock,Watcher {
             CountDownLatch count = new CountDownLatch(1);
             // 连接zookeeper。默认的zookeeper端口是2181，这里要确认Linux的2181端口是否开放
             // watcher在zk有了动作之后就会回调进行通知。
-            zk = new ZooKeeper("192.168.8.56:2181",4000,watchedEvent -> {
-                // 判断回调通知时候的状态是connected，表示已经连接
-                if(Event.KeeperState.SyncConnected == watchedEvent.getState()){
-                    // 此时count进行countDown，放开阻塞
-                    count.countDown();
-                }
-            });
+            // 因为没有watcher进行判断，程序在zk为connecting的状态下就会继续执行，那么暂时的解决方案是把等待时间设置的长一些。（已经通过countDownLatch方法解决）
+            zk = new ZooKeeper("192.168.1.12:2181",4000,this);
+
             // 在这里进行阻塞，等待这个count执行countDown，当这个count执行countDown时，这里的阻塞就会放开，执行下面的代码
-            count.await();
+            /*
+                这里在开发的过程中遇到了一个问题，既然zk在实例化的时候watcher写的是this。
+                那么在有事务操作的时候，执行的肯定是本类中的process，而第一次尝试的时候无效是因为没有设置await来进行等待。
+                设置等待的countDownLatch必须和process中判断的是同一个对象
+             */
+            countDownLatch = new CountDownLatch(1);
+            countDownLatch.await();
             // 这里的exists是获得一个节点的状态，当节点不存在的时候stat会为空。
             Stat stat = zk.exists(ROOT_LOCK,false);
             // 当stat为空的时候，说明这个节点不存在，则进行创建
@@ -69,6 +71,24 @@ public class ZookeeperLockDemo implements Lock,Watcher {
                // create方法，（节点路径，节点初始化内容/值，节点acl策略/权限，节点类型）
                zk.create(ROOT_LOCK,"0".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE,CreateMode.PERSISTENT);
             }
+
+            // 创建当前用来排序的节点（节点路径，节点初始化内容/值，节点acl策略/权限，节点类型）
+            /*
+                节点类型有：
+                （1）PERSISTENT：持久；
+                （2）PERSISTENT_SEQUENTIAL：持久顺序；
+                （3）EPHEMERAL：临时；
+                （4）EPHEMERAL_SEQUENTIAL：临时顺序。
+             */
+            /*
+                创建子节点的代码放在这里的原因是因为，我只要在我每次需要排队的时候实例化zookeeper锁机制类，这个时候我需要创建一个节点，然后尝试获得锁
+                而不能在尝试获得锁的时候创建一个节点。
+             */
+            CURRENT_NODE = zk.create(ROOT_LOCK+"/","0".getBytes(),ZooDefs.Ids.OPEN_ACL_UNSAFE,CreateMode.EPHEMERAL_SEQUENTIAL);
+            System.out.println(Thread.currentThread().getName() + ":" + CURRENT_NODE + "节点进入队列");
+            // 尝试获得锁 这里不执行获得锁的原因是因为在测试方法里面，实例化zookeeper后，调用了lock方法，
+            // 如果想在这里直接进行获得锁操作，则在实例化的时候，就不能执行这个方法，否则会执行两次这个lock方法。
+//            this.lock();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -143,16 +163,14 @@ public class ZookeeperLockDemo implements Lock,Watcher {
     @Override
     public boolean tryLock() {
         try {
-            // 创建当前用来排序的节点（节点路径，节点初始化内容/值，节点acl策略/权限，节点类型）
             /*
-                节点类型有：
-                （1）PERSISTENT：持久；
-                （2）PERSISTENT_SEQUENTIAL：持久顺序；
-                （3）EPHEMERAL：临时；
-                （4）EPHEMERAL_SEQUENTIAL：临时顺序。
+                这里进行了一次改造：
+                    因为在前一个节点消失或者释放之后，需要重新判定锁机制。
+                    但是不能每次判定的时候当前进程又重新创建了一个排队的节点，会扰乱当前的一个监听机制。
              */
-            CURRENT_NODE = zk.create(ROOT_LOCK+"/","0".getBytes(),ZooDefs.Ids.OPEN_ACL_UNSAFE,CreateMode.EPHEMERAL_SEQUENTIAL);
-            System.out.println(Thread.currentThread().getName() + ":" + CURRENT_NODE + "节点进入队列");
+            //CURRENT_NODE = zk.create(ROOT_LOCK+"/","0".getBytes(),ZooDefs.Ids.OPEN_ACL_UNSAFE,CreateMode.EPHEMERAL_SEQUENTIAL);
+            //System.out.println(Thread.currentThread().getName() + ":" + CURRENT_NODE + "节点进入队列");
+
             // 查询当前根节点下面有多少子节点，即队列中有多少人正在排队
             List<String> childrens = zk.getChildren(ROOT_LOCK,false);
             // 创建一个可以排序的集合/要知道排队的人的顺序
@@ -215,7 +233,7 @@ public class ZookeeperLockDemo implements Lock,Watcher {
      */
     @Override
     public void process(WatchedEvent watchedEvent) {
-        if(this.countDownLatch != null){
+        if(this.countDownLatch != null && Event.KeeperState.SyncConnected == watchedEvent.getState()){
             // 放开阻塞
             this.countDownLatch.countDown();
         }
