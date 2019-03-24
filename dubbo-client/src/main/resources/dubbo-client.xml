@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans        http://www.springframework.org/schema/beans/spring-beans.xsd        http://code.alibabatech.com/schema/dubbo        http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+    <!-- 当前节点的名称和维护责任人 -->
+    <dubbo:application name="dubbo-client" owner="yangdayu"/>
+    <!-- 注册中心，address写插件名称，支持4中注册中心multicast zookeeper redis simple -->
+    <!--<dubbo:registry address="N/A"/>-->
+    <dubbo:registry address="zookeeper://192.168.1.12:2181"/>
+    <!-- 协议名称和发布端口号 -->
+    <dubbo:protocol name="dubbo" port="20880"/>
+    <!-- 获得的服务代理和id还有接口地址 -->
+    <dubbo:reference id="DubboTest" interface="com.example.dubbo.api.IDubboTest"/>
+    <!--修改为注册中心的时候就不需要关注服务的地址了-->
+    <!--url="dubbo://192.168.145.1:20880/com.example.dubbo.api.IDubboTest"-->
+
+</beans>
