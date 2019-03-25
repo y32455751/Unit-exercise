@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="../js/jquery-3.3.1.js"></script>
+    <script>
+        /**
+         $.ajax({
+                url:"/test/hello", //处理页面的路径
+                data:{}, //要提交的数据是一个JSON
+                type:"post", //提交方式
+                dataType:"json", //返回数据的类型
+                //TEXT字符串 JSON返回JSON XML返回XML
+                success:function(data){ //回调函数 ,成功时返回的数据存在形参data里
+                    alert(data);
+                },
+                error:function(){
+                    alert();
+                }
+            });
+         */
+        function isEmpty(str){
+            var ss = $.trim(str);
+            if(ss.length == 0 || ss == "" || ss == null || ss == undefined){
+                return false;
+            }
+            return true;
+        }
+
+        function generate(){
+            var moduleName = $("#moduleName").val();
+            var moduleName_Else = $("#moduleName_Else").val();
+            var titleName = $("#titleName").val();
+            if(!isEmpty(moduleName)){
+                alert("文件名大写不能为空");
+                $("#moduleName").focus();
+                return false;
+            }
+
+            if(!isEmpty(moduleName_Else)){
+                alert("文件名小写不能为空");
+                $("#moduleName_Else").focus();
+                return false;
+            }
+
+            if(!isEmpty(titleName)){
+                alert("文件名中文不能为空");
+                $("#titleName").focus();
+                return false;
+            }
+
+            $.ajax({
+                url:"/code/generate", //处理页面的路径
+                data:{
+                    "moduleName" : moduleName,
+                    "moduleName_Else" : moduleName_Else,
+                    "titleName" : titleName
+                }, //要提交的数据是一个JSON
+                type:"post", //提交方式
+                dataType:"text", //返回数据的类型
+                //TEXT字符串 JSON返回JSON XML返回XML
+                success:function(data){ //回调函数 ,成功时返回的数据存在形参data里
+                    var str = data.split("#");
+                    $("#downUrl").attr("href",str[0]);
+                    $("#downUrl").attr("download",str[1]);
+                    $("#downUrl").html("点击下载");
+                },
+                error:function(){
+                    alert(1);
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+<table>
+    <tr>
+        <td>文件名(大写)</td>
+        <td><input type="text" id="moduleName" name="moduleName" value="MyPage"></td>
+        <td>文件名(小写)</td>
+        <td><input type="text" id="moduleName_Else" name="moduleName_Else" value="my-page"></td>
+        <td>文件中文名</td>
+        <td><input type="text" id="titleName" name="titleName" value="我的页面"></td>
+    </tr>
+</table>
+<input type="button" value="生成" onclick="generate()">
+<a href="#" download="#" id="downUrl"></a>
+</body>
+</html>
