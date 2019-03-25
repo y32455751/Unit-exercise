@@ -1,4 +1,4 @@
-package com.activeMQ.example;
+package com.activeMQ.example.topic;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
@@ -7,10 +7,10 @@ import javax.jms.*;
 /**
  * activemq 消息接收端
  */
-public class JMSQueueRevicerForListener {
+public class JMSTopicRevicer_01 {
 
     public static void main(String[] args) {
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://192.168.0.103:61616");
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://39.107.226.30:61616");
 
         Connection connection = null;
         try{
@@ -19,27 +19,16 @@ public class JMSQueueRevicerForListener {
 
             Session session = connection.createSession(Boolean.TRUE,Session.AUTO_ACKNOWLEDGE);
             // 这里也需要创建队列，表示监听这个队列，如果没有这个队列则会创建
-            Destination destination = session.createQueue("TestQueue");
+            Destination destination = session.createTopic("TestTopic");
             // 创建一个消息接收人，接收制定队列的消息
             MessageConsumer consumer = session.createConsumer(destination);
             // 接收消息，正常这里需要进行格式判断，这里使用TextMessage进行举例说明
-            // 这里采取循环接收，而不是接收一次就断开，这样表示为非阻塞
-            MessageListener listener = new MessageListener() {
-                @Override
-                public void onMessage(Message message) {
-                    try {
-                        System.out.println(((TextMessage)message).getText());
-                    } catch (JMSException e) {
-                        e.printStackTrace();
-                    }
-                }
-            };
+            TextMessage message = (TextMessage)consumer.receive();
 
-            while(true){
-                consumer.setMessageListener(listener);
-                session.commit();
-            }
+            System.out.println(message.getText());
 
+            session.commit();
+            session.close();
         } catch (JMSException e) {
             e.printStackTrace();
         } finally {

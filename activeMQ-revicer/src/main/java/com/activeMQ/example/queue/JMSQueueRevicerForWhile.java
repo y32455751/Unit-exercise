@@ -1,4 +1,4 @@
-package com.activeMQ.example;
+package com.activeMQ.example.queue;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 
@@ -10,7 +10,7 @@ import javax.jms.*;
 public class JMSQueueRevicerForWhile {
 
     public static void main(String[] args) {
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://192.168.0.103:61616");
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://39.107.226.30:61616");
 
         Connection connection = null;
         try{
