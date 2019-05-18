@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+namespace：必须与对应的接口全类名一致
+id:必须与对应接口的某个对应的方法名一致
+-->
+<mapper namespace="com.yangdayu.socket.socketgameclient.mapper.UserInfoEntityMapper">
+    <insert id="addUserinfoentity" parameterType="UserInfoEntity">
+        insert into userinfo(objuid,username,loginname,password,createtime,updatetime) values(#{objuid},#{username},#{loginname},#{password},#{createtime},#{updatetime})
+    </insert>
+    <update id="updateUserinfoentity" parameterType="UserInfoEntity">
+        update userinfo set username=#{username},loginname=#{loginname},password=#{password},createtime=#{createtime},updatetime=#{updatetime} where objuid=#{objuid}
+    </update>
+    <delete id="deleteUserinfoentity" parameterType="String">
+        delete from userinfo where objuid=#{objuid}
+    </delete>
+    <select id="findUserinfoentityByObjuid" parameterType="String" resultType="UserInfoEntity">
+        select objuid,username,loginname,password,createtime,updatetime from userinfo where objuid=#{objuid}
+    </select>
+    <select id="findAllUserinfoentity" resultType="UserInfoEntity">
+        select objuid,username,loginname,password,createtime,updatetime from userinfo
+    </select>
+    <select id="findUserinfoentityByPage" parameterType="UserInfoEntity" resultType="UserInfoEntity">
+        select objuid,username,loginname,password,createtime,updatetime from (
+        select objuid,username,loginname,password,createtime,updatetime,rownum row_num from userinfo where 1=1
+        <if test="objuid!=null and objuid!='' ">
+            AND objuid LIKE concat(concat('%',#{objuid}),'%')
+        </if>
+        <if test="username!=null and username!='' ">
+            AND username LIKE concat(concat('%',#{username}),'%')
+        </if>
+        <if test="loginname!=null and loginname!='' ">
+            AND loginname LIKE concat(concat('%',#{loginname}),'%')
+        </if>
+        <if test="password!=null and password!='' ">
+            AND password LIKE concat(concat('%',#{password}),'%')
+        </if>
+        ) where row_num between #{pagestart} and #{pageend}
+    </select>
+    <select id="findUserinfoentityByWhere" parameterType="UserInfoEntity" resultType="UserInfoEntity">
+        select objuid,username,loginname,password,createtime,updatetime from userinfo where 1=1
+        <if test="objuid!=null and objuid!='' ">
+            AND objuid = #{objuid}
+        </if>
+        <if test="username!=null and username!='' ">
+            AND username = #{username}
+        </if>
+        <if test="loginname!=null and loginname!='' ">
+            AND loginname = #{loginname}
+        </if>
+        <if test="password!=null and password!='' ">
+            AND password = #{password}
+        </if>
+    </select>
+</mapper>
