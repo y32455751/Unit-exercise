@@ -54,7 +54,7 @@ public class ZookeeperLockDemo implements Lock,Watcher {
             // 连接zookeeper。默认的zookeeper端口是2181，这里要确认Linux的2181端口是否开放
             // watcher在zk有了动作之后就会回调进行通知。
             // 因为没有watcher进行判断，程序在zk为connecting的状态下就会继续执行，那么暂时的解决方案是把等待时间设置的长一些。（已经通过countDownLatch方法解决）
-            zk = new ZooKeeper("192.168.1.12:2181",4000,this);
+            zk = new ZooKeeper("192.168.0.102:2181",4000,this);
 
             // 在这里进行阻塞，等待这个count执行countDown，当这个count执行countDown时，这里的阻塞就会放开，执行下面的代码
             /*
