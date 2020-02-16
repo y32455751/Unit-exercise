@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mypro.service2.dao.UserInfoDao">
+
+    <select id="getUserInfo" parameterType="_int" resultType="com.mypro.userInfoService.bean.UserInfo">
+        SELECT
+        *
+        FROM `userinfo`
+        where `objuid` = #{objuid}
+    </select>
+
+
+    <select id="getUserInfoList" resultType="com.mypro.userInfoService.bean.UserInfo">
+        SELECT
+        *
+        FROM `userinfo`
+        <if test="page != null and page gte 0">
+            LIMIT #{page}, #{pagesize}
+        </if>
+    </select>
+
+
+    <delete id="deleteUserInfo" parameterType="_int">
+        DELETE FROM `userinfo` where objuid = #{objuid}
+    </delete>
+
+    <insert id="addUserInfo" parameterType="com.mypro.userInfoService.bean.UserInfo">
+        INSERT INTO `userinfo` SET
+        `username` = #{username},
+        loginname = #{loginname},
+        password = #{password},
+        updatetime = #{updatetime},
+        createtime = #{createtime}
+        <selectKey resultType="java.lang.String" order="AFTER" keyProperty="id">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+</mapper>
