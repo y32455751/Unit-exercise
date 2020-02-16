@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mypro.service.dao.CoachOrder3Dao">
+
+    <select id="getCoachOrderById" parameterType="_int" resultType="com.mypro.www.bean.CoachOrder3">
+        SELECT
+        *
+        FROM `coachorder`
+        where `id` = #{id}
+    </select>
+
+
+    <select id="getCoachOrderList" resultType="com.mypro.www.bean.CoachOrder3">
+        SELECT
+        *
+        FROM `coachorder`
+        <if test="page != null and page gte 0">
+            LIMIT #{page}, #{pagesize}
+        </if>
+    </select>
+
+
+    <delete id="deleteCoachOrder" parameterType="_int">
+        DELETE FROM `coachorder` where id = #{id}
+    </delete>
+
+
+    <insert id="addCoachOrder" parameterType="com.mypro.www.bean.CoachOrder3">
+        INSERT INTO `coachorder` SET
+        `name` = #{name},
+        orderCode = #{orderCode},
+        payTime = #{payTime},
+        price = #{price}
+        <selectKey resultType="_int" order="AFTER" keyProperty="id">
+            SELECT LAST_INSERT_ID();
+        </selectKey>
+    </insert>
+</mapper>
